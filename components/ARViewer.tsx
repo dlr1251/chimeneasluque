@@ -286,6 +286,18 @@ export default function ARViewer({ onClose }: ARViewerProps) {
                     canvas.style.display = "block";
                     console.log("✓ Canvas visible");
                   }
+                  
+                  // Añadir listener para detectar cuando el marcador se detecta
+                  const marker = document.querySelector("a-marker") as any;
+                  if (marker) {
+                    marker.addEventListener("markerFound", () => {
+                      console.log("✓ Marcador detectado!");
+                    });
+                    marker.addEventListener("markerLost", () => {
+                      console.log("⚠ Marcador perdido");
+                    });
+                  }
+                  
                   setCaptureReady(true);
                 } else {
                   console.warn("Video aún no está listo, reintentando...");
@@ -325,6 +337,18 @@ export default function ARViewer({ onClose }: ARViewerProps) {
                 if (video && video.readyState >= 2) {
                   console.log("✓ Video de cámara listo");
                 }
+                
+                // Añadir listener para detectar cuando el marcador se detecta
+                const marker = document.querySelector("a-marker") as any;
+                if (marker) {
+                  marker.addEventListener("markerFound", () => {
+                    console.log("✓ Marcador detectado!");
+                  });
+                  marker.addEventListener("markerLost", () => {
+                    console.log("⚠ Marcador perdido");
+                  });
+                }
+                
                 setCaptureReady(true);
               } else {
                 console.warn("Cámara no detectada, pero continuando...");
@@ -637,7 +661,7 @@ export default function ARViewer({ onClose }: ARViewerProps) {
                 )}
                 <a-scene
                   embedded
-                  arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; maxDetectionRate: 60; canvasWidth: 640; canvasHeight: 480;"
+                  arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false; detectionMode: mono; cameraParametersUrl: https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/data/camera_para.dat; maxDetectionRate: 60; canvasWidth: 640; canvasHeight: 480;"
                   vr-mode-ui="enabled: false"
                   renderer="logarithmicDepthBuffer: true; colorManagement: true; sortObjects: true; antialias: true; alpha: false"
                   id="arjs-video"
@@ -647,6 +671,7 @@ export default function ARViewer({ onClose }: ARViewerProps) {
                 <a-marker
                   preset="hiro"
                   type="pattern"
+                  size="1"
                   raycaster="objects: .interactive"
                   emitevents="true"
                   cursor="fuse: false; rayOrigin: mouse"
