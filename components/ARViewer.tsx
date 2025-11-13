@@ -225,7 +225,7 @@ export default function ARViewer({ onClose }: ARViewerProps) {
     if (!aframeReady || isLoading) return;
 
     const checkSceneLoaded = () => {
-      const scene = document.querySelector("a-scene");
+      const scene = document.querySelector("a-scene") as any;
       if (scene) {
         if (scene.hasLoaded) {
           console.log("✓ Escena A-Frame cargada");
