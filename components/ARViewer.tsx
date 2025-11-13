@@ -272,11 +272,31 @@ export default function ARViewer({ onClose }: ARViewerProps) {
           // Esperar a que AR.js inicialice la cámara
           const checkCamera = () => {
             const arSystem = scene.systems["arjs"] || scene.systems["arjs-system"];
-            if (arSystem && arSystem._arSource && arSystem._arSource.ready) {
-              console.log("✓ Cámara AR.js lista");
-              setCaptureReady(true);
+            if (arSystem && arSystem._arSource) {
+              if (arSystem._arSource.ready) {
+                console.log("✓ Cámara AR.js lista");
+                
+                // Verificar que el video se esté mostrando
+                const video = arSystem._arSource.domElement;
+                if (video && video.readyState >= 2) {
+                  console.log("✓ Video de cámara cargado y listo");
+                  // Asegurar que el canvas muestre el video
+                  const canvas = scene.canvas;
+                  if (canvas) {
+                    canvas.style.display = "block";
+                    console.log("✓ Canvas visible");
+                  }
+                  setCaptureReady(true);
+                } else {
+                  console.warn("Video aún no está listo, reintentando...");
+                  setTimeout(checkCamera, 500);
+                }
+              } else {
+                // Reintentar después de un momento
+                setTimeout(checkCamera, 500);
+              }
             } else {
-              // Reintentar después de un momento
+              console.warn("Sistema AR.js no encontrado, reintentando...");
               setTimeout(checkCamera, 500);
             }
           };
@@ -301,6 +321,10 @@ export default function ARViewer({ onClose }: ARViewerProps) {
               const arSystem = scene.systems["arjs"] || scene.systems["arjs-system"];
               if (arSystem && arSystem._arSource && arSystem._arSource.ready) {
                 console.log("✓ Cámara AR.js lista");
+                const video = arSystem._arSource.domElement;
+                if (video && video.readyState >= 2) {
+                  console.log("✓ Video de cámara listo");
+                }
                 setCaptureReady(true);
               } else {
                 console.warn("Cámara no detectada, pero continuando...");
@@ -615,7 +639,7 @@ export default function ARViewer({ onClose }: ARViewerProps) {
                   embedded
                   arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; maxDetectionRate: 60; canvasWidth: 640; canvasHeight: 480;"
                   vr-mode-ui="enabled: false"
-                  renderer="logarithmicDepthBuffer: true; colorManagement: true; sortObjects: true; antialias: true; alpha: true"
+                  renderer="logarithmicDepthBuffer: true; colorManagement: true; sortObjects: true; antialias: true; alpha: false"
                   id="arjs-video"
                   style={{ width: "100%", height: "100%", opacity: arjsReady ? 1 : 0 }}
                 >
@@ -671,8 +695,7 @@ export default function ARViewer({ onClose }: ARViewerProps) {
                   light="type: hemisphere; color: #87CEEB; groundColor: #8B4513; intensity: 0.5"
                 ></a-entity>
 
-                {/* Cielo/background */}
-                <a-sky color="#87CEEB"></a-sky>
+                {/* No usar a-sky en modo AR, el video de la cámara es el fondo */}
               </a-scene>
               </>
             ) : (
