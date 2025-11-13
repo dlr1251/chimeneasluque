@@ -94,10 +94,34 @@ Las imágenes deben guardarse en:
 - `public/images/chimeneas/` - Chimeneas (chimenea1.jpg, chimenea2.jpg, ..., chimenea32.jpg)
 - `public/images/fogatas/` - Fogatas (fogata1.jpg, fogata2.jpg, ..., fogata14.jpg)
 
+## Despliegue
+
+Para desplegar esta aplicación en GitHub y Vercel, consulta la guía completa en [DEPLOY.md](./DEPLOY.md).
+
+### Despliegue Rápido
+
+1. **Sube a GitHub:**
+   ```bash
+   # Reemplaza YOUR_USERNAME con tu usuario de GitHub
+   git remote add origin https://github.com/YOUR_USERNAME/chimeneasluque.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+2. **Despliega en Vercel:**
+   - Ve a [Vercel](https://vercel.com) e inicia sesión
+   - Haz clic en "Add New Project"
+   - Importa tu repositorio de GitHub
+   - Vercel detectará automáticamente Next.js y desplegará
+
 ## Notas
 
 - Las imágenes se optimizan automáticamente usando Next.js Image component.
 - Si las imágenes no se descargan automáticamente, puedes descargarlas manualmente siguiendo las instrucciones en [README-IMAGES.md](./README-IMAGES.md).
 - El formulario de contacto actualmente abre el cliente de correo predeterminado. Puedes integrarlo con un servicio de backend si lo deseas.
 - Las imágenes que no existen mostrarán un placeholder automáticamente hasta que se descarguen.
+
+## Licencia
+
+Este proyecto es un clon educativo del sitio web de Chimeneas Luque.
 
