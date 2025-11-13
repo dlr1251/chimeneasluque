@@ -175,6 +175,45 @@ export default function ARViewer({ onClose }: ARViewerProps) {
     };
   }, [arMode, arjsReady]);
 
+  // Solicitar permisos de cámara cuando el componente esté listo
+  useEffect(() => {
+    if (arMode !== "marker" || !arjsReady) return;
+
+    const requestCameraPermission = async () => {
+      try {
+        // Solicitar permisos de cámara explícitamente
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment', // Preferir cámara trasera en móviles
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          } 
+        });
+        
+        console.log("✓ Permisos de cámara otorgados");
+        // Detener el stream inmediatamente, AR.js lo manejará
+        stream.getTracks().forEach(track => track.stop());
+      } catch (err: any) {
+        console.error("Error solicitando permisos de cámara:", err);
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setError("Se requiere permiso para acceder a la cámara. Por favor, permite el acceso en la configuración del navegador.");
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          setError("No se encontró ninguna cámara en este dispositivo.");
+        } else {
+          setError("Error al acceder a la cámara. Verifica que el dispositivo tenga una cámara y que esté disponible.");
+        }
+        setIsLoading(false);
+      }
+    };
+
+    // Esperar un momento antes de solicitar permisos
+    const timeoutId = setTimeout(requestCameraPermission, 500);
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [arMode, arjsReady]);
+
   // Verificar GPS
   useEffect(() => {
     if (navigator.geolocation) {
@@ -220,32 +259,65 @@ export default function ARViewer({ onClose }: ARViewerProps) {
     }
   }, [arMode, arjsReady]);
 
-  // Escuchar cuando la escena A-Frame esté completamente cargada
+  // Escuchar cuando la escena A-Frame esté completamente cargada y la cámara esté lista
   useEffect(() => {
-    if (!aframeReady || isLoading) return;
+    if (!aframeReady || !arjsReady || isLoading || arMode !== "marker") return;
 
     const checkSceneLoaded = () => {
       const scene = document.querySelector("a-scene") as any;
       if (scene) {
         if (scene.hasLoaded) {
           console.log("✓ Escena A-Frame cargada");
-          setCaptureReady(true);
+          
+          // Esperar a que AR.js inicialice la cámara
+          const checkCamera = () => {
+            const arSystem = scene.systems["arjs"] || scene.systems["arjs-system"];
+            if (arSystem && arSystem._arSource && arSystem._arSource.ready) {
+              console.log("✓ Cámara AR.js lista");
+              setCaptureReady(true);
+            } else {
+              // Reintentar después de un momento
+              setTimeout(checkCamera, 500);
+            }
+          };
+          
+          // Dar tiempo para que AR.js se inicialice
+          setTimeout(checkCamera, 1000);
+          
+          // Timeout de seguridad
+          setTimeout(() => {
+            if (!captureReady) {
+              console.warn("Timeout esperando cámara, continuando...");
+              setCaptureReady(true);
+            }
+          }, 5000);
         } else {
           const onSceneLoaded = () => {
             console.log("✓ Escena A-Frame cargada (evento)");
-            setCaptureReady(true);
             scene.removeEventListener("loaded", onSceneLoaded);
+            
+            // Esperar a que AR.js inicialice la cámara
+            setTimeout(() => {
+              const arSystem = scene.systems["arjs"] || scene.systems["arjs-system"];
+              if (arSystem && arSystem._arSource && arSystem._arSource.ready) {
+                console.log("✓ Cámara AR.js lista");
+                setCaptureReady(true);
+              } else {
+                console.warn("Cámara no detectada, pero continuando...");
+                setCaptureReady(true);
+              }
+            }, 2000);
           };
           scene.addEventListener("loaded", onSceneLoaded);
           
-          // Timeout de seguridad - marcar como listo después de 3 segundos
+          // Timeout de seguridad
           setTimeout(() => {
             scene.removeEventListener("loaded", onSceneLoaded);
             if (!captureReady) {
               console.warn("Timeout esperando carga de escena, continuando...");
               setCaptureReady(true);
             }
-          }, 3000);
+          }, 5000);
         }
       } else {
         // Si no hay escena aún, reintentar
@@ -259,7 +331,7 @@ export default function ARViewer({ onClose }: ARViewerProps) {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [aframeReady, isLoading, captureReady]);
+  }, [aframeReady, arjsReady, isLoading, captureReady, arMode]);
 
   // Inicializar escena AR después de que A-Frame esté listo
   useEffect(() => {
@@ -541,9 +613,9 @@ export default function ARViewer({ onClose }: ARViewerProps) {
                 )}
                 <a-scene
                   embedded
-                  arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;"
+                  arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; maxDetectionRate: 60; canvasWidth: 640; canvasHeight: 480;"
                   vr-mode-ui="enabled: false"
-                  renderer="logarithmicDepthBuffer: true; colorManagement: true; sortObjects: true"
+                  renderer="logarithmicDepthBuffer: true; colorManagement: true; sortObjects: true; antialias: true; alpha: true"
                   id="arjs-video"
                   style={{ width: "100%", height: "100%", opacity: arjsReady ? 1 : 0 }}
                 >
