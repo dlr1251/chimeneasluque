@@ -14,8 +14,7 @@
     "react-dom": "^18.3.1",
     "next": "^14.2.5",
     "lucide-react": "^0.424.0",
-    "aframe": "^1.4.2",
-    "ar.js": "^3.4.0"
+    "aframe": "^1.4.2"
   },
   "devDependencies": {
     "typescript": "^5.5.4",

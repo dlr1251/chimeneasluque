@@ -6,6 +6,7 @@ import Hornos from "@/components/Hornos";
 import Chimeneas from "@/components/Chimeneas";
 import Fogatas from "@/components/Fogatas";
 import Contacto from "@/components/Contacto";
+import Chatbot from "@/components/Chatbot";
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
       <Chimeneas />
       <Fogatas />
       <Contacto />
+      <Chatbot />
     </main>
   );
 }

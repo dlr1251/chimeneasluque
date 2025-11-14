@@ -23,10 +23,21 @@ export default function ARViewer({ onClose }: ARViewerProps) {
   const [captureReady, setCaptureReady] = useState(false);
   const [aframeReady, setAframeReady] = useState(false);
   const [arjsReady, setArjsReady] = useState(false);
+  const [cameraPermissionDenied, setCameraPermissionDenied] = useState(false);
+  const [isCursorBrowser, setIsCursorBrowser] = useState(false);
   const sceneRef = useRef<HTMLDivElement>(null);
   const sceneInitialized = useRef(false);
   const aframeScriptLoading = useRef(false);
   const arjsScriptLoading = useRef(false);
+
+  // Detectar si estamos en Cursor's browser
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isCursor = userAgent.includes('cursor') || 
+                     window.location.hostname.includes('localhost') && 
+                     (window as any).__CURSOR__ !== undefined;
+    setIsCursorBrowser(isCursor);
+  }, []);
 
   // Cargar scripts manualmente para mayor control
   useEffect(() => {
@@ -196,9 +207,15 @@ export default function ARViewer({ onClose }: ARViewerProps) {
       } catch (err: any) {
         console.error("Error solicitando permisos de cámara:", err);
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          setError("Se requiere permiso para acceder a la cámara. Por favor, permite el acceso en la configuración del navegador.");
+          setCameraPermissionDenied(true);
+          setError("Permiso de cámara denegado. Puedes usar el modo de escritorio o permitir el acceso a la cámara en la configuración del navegador.");
         } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-          setError("No se encontró ninguna cámara en este dispositivo.");
+          setError("No se encontró ninguna cámara en este dispositivo. Cambiando al modo de escritorio...");
+          setTimeout(() => {
+            setArMode("desktop");
+            setShowInstructions(false);
+            setError(null);
+          }, 2000);
         } else {
           setError("Error al acceder a la cámara. Verifica que el dispositivo tenga una cámara y que esté disponible.");
         }
@@ -547,7 +564,44 @@ export default function ARViewer({ onClose }: ARViewerProps) {
     );
   }
 
-  if (error) {
+  const retryCameraPermission = async () => {
+    setError(null);
+    setCameraPermissionDenied(false);
+    setIsLoading(true);
+    
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        } 
+      });
+      
+      console.log("✓ Permisos de cámara otorgados");
+      stream.getTracks().forEach(track => track.stop());
+      setCameraPermissionDenied(false);
+      setIsLoading(false);
+    } catch (err: any) {
+      console.error("Error solicitando permisos de cámara:", err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setCameraPermissionDenied(true);
+        setError("Permiso de cámara denegado. Por favor, permite el acceso a la cámara en la configuración del navegador y recarga la página.");
+      } else {
+        setError("Error al acceder a la cámara. Intenta usar el modo de escritorio.");
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const switchToDesktop = () => {
+    setArMode("desktop");
+    setShowInstructions(false);
+    setError(null);
+    setCameraPermissionDenied(false);
+  };
+
+  if (error && !cameraPermissionDenied) {
     return (
       <div className="fixed inset-0 z-50 bg-black text-white flex items-center justify-center p-4">
         <div className="text-center max-w-md">
@@ -560,6 +614,62 @@ export default function ARViewer({ onClose }: ARViewerProps) {
               Cerrar
             </button>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  if (cameraPermissionDenied) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black text-white flex items-center justify-center p-4">
+        <div className="text-center max-w-md space-y-4">
+          <div className="mb-4">
+            <Camera className="w-16 h-16 mx-auto mb-4 text-accent" />
+            <h2 className="text-2xl font-bold mb-2">Permiso de Cámara Requerido</h2>
+            <p className="text-gray-300 mb-4">{error}</p>
+            {isCursorBrowser && (
+              <div className="bg-accent/20 border border-accent/50 rounded-lg p-3 mb-4 text-sm">
+                <p className="font-semibold text-accent mb-1">💡 Usando Cursor Browser</p>
+                <p className="text-gray-300">
+                  Si no puedes otorgar permisos de cámara en Cursor, usa el botón "Usar Modo Escritorio" para ver el modelo 3D sin necesidad de cámara.
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <div className="bg-white/10 rounded-lg p-4 mb-4 text-left">
+            <p className="font-semibold mb-2">Cómo permitir el acceso a la cámara:</p>
+            <ul className="text-sm space-y-2 text-gray-300">
+              <li>• <strong>Cursor Browser:</strong> Haz clic en el ícono de candado o cámara en la barra de direcciones → Permisos → Cámara → Permitir. O ve a Cursor Settings → Privacy → Camera y permite el acceso.</li>
+              <li>• <strong>Chrome/Edge:</strong> Haz clic en el ícono de cámara en la barra de direcciones y selecciona "Permitir"</li>
+              <li>• <strong>Safari:</strong> Ve a Preferencias → Sitios web → Cámara y permite el acceso</li>
+              <li>• <strong>Firefox:</strong> Haz clic en el ícono de cámara en la barra de direcciones y selecciona "Permitir"</li>
+              <li>• <strong>Móvil:</strong> Ve a Configuración del navegador y permite el acceso a la cámara</li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={retryCameraPermission}
+              className="px-6 py-3 bg-accent text-white rounded-md hover:bg-accent/90 transition-colors font-medium"
+            >
+              Reintentar
+            </button>
+            <button
+              onClick={switchToDesktop}
+              className="px-6 py-3 bg-secondary text-primary rounded-md hover:bg-gray-300 transition-colors font-medium"
+            >
+              Usar Modo Escritorio
+            </button>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="px-6 py-3 bg-white/20 text-white rounded-md hover:bg-white/30 transition-colors"
+              >
+                Cerrar
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );

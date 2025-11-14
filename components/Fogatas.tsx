@@ -1,75 +1,90 @@
 "use client";
 
 import { useImages } from "@/hooks/useImages";
-import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import ImageGallery from "./ImageGallery";
 
 export default function Fogatas() {
   const { images, loading } = useImages('fogatas');
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
+  const handleImageError = (id: number) => {
+    setImageErrors((prev) => new Set(prev).add(id));
+  };
 
   return (
-    <section id="fogatas" className="py-16 md:py-24 bg-white">
-      <div className="container mx-auto px-4">
+    <section
+      ref={sectionRef}
+      id="fogatas"
+      className="py-16 md:py-32 bg-gradient-to-b from-white via-secondary-50 to-white relative overflow-hidden"
+    >
+      {/* Decorative Elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-accent-300/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent-400/10 rounded-full blur-3xl"></div>
+
+      <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4 text-center">
-            FOGATAS
+          <h2
+            className={`text-3xl md:text-5xl font-heading font-bold text-primary mb-6 text-center transition-all duration-1000 ${
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
+          >
+            <span className="text-shadow-md">FOGATAS</span>
           </h2>
-          <p className="text-base md:text-lg text-gray-700 mb-12 text-center max-w-2xl mx-auto">
+          <p
+            className={`text-base md:text-lg text-primary-700 mb-12 text-center max-w-2xl mx-auto leading-relaxed transition-all duration-1000 delay-200 ${
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
+          >
             La artesanía del fuego, su tradición milenaria, su esencia purificadora y su ambientación en jardines en donde florece a diario la naturaleza son nuestra motivación. Tenemos el gusto de presentarle nuestras fogatas prefabricadas y otros elementos para su jardín.
           </p>
 
-          {/* Image Gallery */}
-          {!loading && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {images.map((image) => {
-                const hasError = imageErrors.has(image.id);
-                
-                // Intentar diferentes extensiones si la primera falla
-                const extensions = ['.jpg', '.jpeg', '.png', '.webp'];
-                const baseSrc = image.src.replace(/\.(jpg|jpeg|png|webp)$/i, '');
-                const currentExt = image.src.match(/\.(jpg|jpeg|png|webp)$/i)?.[0] || '.jpg';
-                const extIndex = extensions.indexOf(currentExt);
-                const nextExtIndex = extIndex < extensions.length - 1 ? extIndex + 1 : -1;
-                
-                return (
-                  <div
-                    key={image.id}
-                    className="aspect-[4/3] bg-secondary rounded-lg overflow-hidden group cursor-pointer hover:opacity-90 transition-opacity relative"
-                  >
-                    {hasError ? (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                        <span className="text-gray-500 text-sm">Fogata {image.id}</span>
-                      </div>
-                    ) : (
-                      <Image
-                        src={image.src}
-                        alt={image.alt}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                        onError={(e) => {
-                          if (nextExtIndex >= 0) {
-                            // Intentar siguiente extensión
-                            const nextSrc = baseSrc + extensions[nextExtIndex];
-                            (e.target as HTMLImageElement).src = nextSrc;
-                          } else {
-                            // Mostrar placeholder si todas las extensiones fallan
-                            setImageErrors(prev => new Set(prev).add(image.id));
-                          }
-                        }}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {/* Modern Image Gallery */}
+          <div
+            className={`transition-all duration-1000 delay-300 ${
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
+          >
+            <ImageGallery
+              images={images}
+              loading={loading}
+              imageErrors={imageErrors}
+              onImageError={handleImageError}
+              categoryName="fogatas"
+            />
+          </div>
 
-          <div className="text-center mt-8">
+          <div
+            className={`text-center mt-12 transition-all duration-1000 delay-400 ${
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
+          >
             <a
               href="#fogatas"
-              className="inline-block px-6 py-3 bg-primary text-white rounded-md hover:bg-accent transition-colors"
+              className="inline-flex items-center px-6 py-3 glass-card rounded-lg text-primary hover:text-accent-500 transition-all duration-300 transform hover:scale-105 hover:shadow-glass-lg font-medium"
             >
               Ver fogatas
             </a>
