@@ -631,7 +631,7 @@ export default function ARViewer({ onClose }: ARViewerProps) {
               <div className="bg-accent/20 border border-accent/50 rounded-lg p-3 mb-4 text-sm">
                 <p className="font-semibold text-accent mb-1">💡 Usando Cursor Browser</p>
                 <p className="text-gray-300">
-                  Si no puedes otorgar permisos de cámara en Cursor, usa el botón "Usar Modo Escritorio" para ver el modelo 3D sin necesidad de cámara.
+                  Si no puedes otorgar permisos de cámara en Cursor, usa el botón &quot;Usar Modo Escritorio&quot; para ver el modelo 3D sin necesidad de cámara.
                 </p>
               </div>
             )}
@@ -641,9 +641,9 @@ export default function ARViewer({ onClose }: ARViewerProps) {
             <p className="font-semibold mb-2">Cómo permitir el acceso a la cámara:</p>
             <ul className="text-sm space-y-2 text-gray-300">
               <li>• <strong>Cursor Browser:</strong> Haz clic en el ícono de candado o cámara en la barra de direcciones → Permisos → Cámara → Permitir. O ve a Cursor Settings → Privacy → Camera y permite el acceso.</li>
-              <li>• <strong>Chrome/Edge:</strong> Haz clic en el ícono de cámara en la barra de direcciones y selecciona "Permitir"</li>
+              <li>• <strong>Chrome/Edge:</strong> Haz clic en el ícono de cámara en la barra de direcciones y selecciona &quot;Permitir&quot;</li>
               <li>• <strong>Safari:</strong> Ve a Preferencias → Sitios web → Cámara y permite el acceso</li>
-              <li>• <strong>Firefox:</strong> Haz clic en el ícono de cámara en la barra de direcciones y selecciona "Permitir"</li>
+              <li>• <strong>Firefox:</strong> Haz clic en el ícono de cámara en la barra de direcciones y selecciona &quot;Permitir&quot;</li>
               <li>• <strong>Móvil:</strong> Ve a Configuración del navegador y permite el acceso a la cámara</li>
             </ul>
           </div>
