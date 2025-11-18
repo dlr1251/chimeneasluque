@@ -172,6 +172,7 @@ export async function POST(request: Request) {
       // Si la API falla, proporcionar una respuesta básica usando las FAQs
       const relevantFAQ = relevantFAQs[0];
       if (relevantFAQ) {
+        console.log('[Chat API] Using FAQ fallback due to API error');
         return NextResponse.json({
           message: relevantFAQ.answer,
           source: 'faq',
@@ -180,14 +181,16 @@ export async function POST(request: Request) {
         });
       }
       
+      // Si no hay FAQs, devolver un mensaje útil pero con status 200 para que el cliente no muestre error
+      console.warn('[Chat API] No FAQs available, returning generic message');
       return NextResponse.json(
         { 
-          error: 'Error al comunicarse con el asistente',
-          message: 'Lo sentimos, estamos experimentando problemas técnicos. Por favor, contacte con nosotros directamente a través del formulario de contacto.',
+          message: 'Gracias por su consulta. Para brindarle la mejor atención, le invitamos a contactarnos directamente a través del formulario de contacto o llamarnos al teléfono que aparece en nuestra página.',
+          source: 'fallback',
           fallback: true,
           debug: isDevelopment ? errorDetails : undefined
         },
-        { status: 500 }
+        { status: 200 }
       );
     }
 
@@ -247,14 +250,16 @@ export async function POST(request: Request) {
       });
     }
 
+    // Si no hay FAQs, devolver un mensaje útil pero con status 200
+    console.warn('[Chat API] No FAQs available for error fallback, returning generic message');
     return NextResponse.json(
       { 
-        error: 'Internal server error',
-        message: 'Lo sentimos, estamos experimentando problemas técnicos. Por favor, contacte con nosotros directamente a través del formulario de contacto.',
+        message: 'Gracias por su consulta. Para brindarle la mejor atención, le invitamos a contactarnos directamente a través del formulario de contacto o llamarnos al teléfono que aparece en nuestra página.',
+        source: 'fallback',
         fallback: true,
         debug: isDevelopment ? errorDetails : undefined
       },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }
