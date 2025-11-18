@@ -88,20 +88,44 @@ export default function Chatbot({ onClose, initialOpen = false }: ChatbotProps) 
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
+        
+        // Log debug info si está disponible
+        if (data.debug) {
+          console.log('[Chatbot] Debug info:', data.debug);
+        }
       } else {
+        // Log detallado del error
+        console.error('[Chatbot] API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: data,
+          url: '/api/chat'
+        });
+        
         // Si la API devuelve un mensaje, usarlo; de lo contrario, usar el error genérico
-        const errorContent = data.message || data.error || "Error al enviar mensaje";
+        let errorContent = data.message || data.error || "Error al enviar mensaje";
+        
+        // Si hay información de debug, loguearla (solo en consola, no en mensaje al usuario)
+        if (data.debug) {
+          console.error('[Chatbot] Debug details:', data.debug);
+        }
+        
         throw new Error(errorContent);
       }
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("[Chatbot] Error sending message:", error);
+      
       // Mostrar el mensaje de error específico si está disponible
+      let errorContent = "Lo siento, ocurrió un error al procesar tu mensaje. Por favor, intenta de nuevo o contacta con nosotros directamente a través del formulario de contacto.";
+      
+      if (error instanceof Error) {
+        errorContent = error.message || errorContent;
+      }
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: error instanceof Error && error.message 
-          ? error.message 
-          : "Lo siento, ocurrió un error al procesar tu mensaje. Por favor, intenta de nuevo o contacta con nosotros directamente a través del formulario de contacto.",
+        content: errorContent,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);

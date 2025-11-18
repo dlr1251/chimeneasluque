@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getContextForChatbot, findRelevantFAQs } from '@/lib/customer-service';
 
 export async function POST(request: Request) {
+  const startTime = Date.now();
   let message: string = '';
   let conversationHistory: any[] = [];
 
@@ -10,7 +11,13 @@ export async function POST(request: Request) {
     const body = await request.json();
     message = body.message || '';
     conversationHistory = body.conversationHistory || [];
+    console.log('[Chat API] Request received:', {
+      messageLength: message.length,
+      historyLength: conversationHistory.length,
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
+    console.error('[Chat API] Error parsing request body:', error);
     return NextResponse.json(
       { error: 'Invalid request body', message: 'Por favor, envía un mensaje válido.' },
       { status: 400 }
@@ -29,20 +36,31 @@ export async function POST(request: Request) {
 
   // Obtener API key de xAI desde variables de entorno
   const apiKey = process.env.XAI_API_KEY;
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  console.log('[Chat API] Configuration check:', {
+    hasApiKey: !!apiKey,
+    apiKeyLength: apiKey ? apiKey.length : 0,
+    isDevelopment,
+    hasFAQs: relevantFAQs.length > 0
+  });
   
   // Si no hay API key, usar directamente las FAQs
   if (!apiKey) {
+    console.warn('[Chat API] XAI_API_KEY not configured, using FAQ fallback');
     if (relevantFAQs.length > 0) {
       return NextResponse.json({
         message: relevantFAQs[0].answer,
         source: 'faq',
-        fallback: true
+        fallback: true,
+        debug: isDevelopment ? { reason: 'No API key configured' } : undefined
       });
     }
     return NextResponse.json(
       { 
         error: 'XAI API key not configured',
-        message: 'Por favor, configure la variable de entorno XAI_API_KEY. Mientras tanto, puede contactarnos directamente a través del formulario de contacto.'
+        message: 'Por favor, configure la variable de entorno XAI_API_KEY. Mientras tanto, puede contactarnos directamente a través del formulario de contacto.',
+        debug: isDevelopment ? { reason: 'No API key and no FAQs available' } : undefined
       },
       { status: 500 }
     );
@@ -82,6 +100,14 @@ export async function POST(request: Request) {
     const model = process.env.XAI_MODEL || 'grok-4-fast-non-reasoning';
     const collectionId = process.env.XAI_COLLECTION_ID || 'collection_05bc70b6-74a2-4e41-a698-11d261dbad08';
     
+    console.log('[Chat API] Preparing xAI request:', {
+      apiUrl,
+      model,
+      hasCollectionId: !!collectionId,
+      messagesCount: messages.length,
+      systemPromptLength: systemPrompt.length
+    });
+    
     // Construir el body de la petición
     const requestBody: any = {
       model: model,
@@ -99,6 +125,9 @@ export async function POST(request: Request) {
       // requestBody.collection = collectionId;
     }
     
+    const requestStartTime = Date.now();
+    console.log('[Chat API] Sending request to xAI...');
+    
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -107,23 +136,38 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify(requestBody)
     });
+    
+    const requestDuration = Date.now() - requestStartTime;
+    console.log('[Chat API] xAI response received:', {
+      status: response.status,
+      statusText: response.statusText,
+      duration: `${requestDuration}ms`,
+      headers: Object.fromEntries(response.headers.entries())
+    });
 
     if (!response.ok) {
       let errorData;
       try {
         errorData = await response.json();
       } catch {
-        errorData = await response.text();
+        try {
+          errorData = await response.text();
+        } catch {
+          errorData = 'Could not parse error response';
+        }
       }
       
-      console.error('xAI API Error:', {
+      const errorDetails = {
         status: response.status,
         statusText: response.statusText,
         error: errorData,
         collectionId: collectionId,
         model: model,
-        apiUrl: apiUrl
-      });
+        apiUrl: apiUrl,
+        requestDuration: `${requestDuration}ms`
+      };
+      
+      console.error('[Chat API] xAI API Error:', errorDetails);
       
       // Si la API falla, proporcionar una respuesta básica usando las FAQs
       const relevantFAQ = relevantFAQs[0];
@@ -131,7 +175,8 @@ export async function POST(request: Request) {
         return NextResponse.json({
           message: relevantFAQ.answer,
           source: 'faq',
-          fallback: true
+          fallback: true,
+          debug: isDevelopment ? errorDetails : undefined
         });
       }
       
@@ -139,7 +184,8 @@ export async function POST(request: Request) {
         { 
           error: 'Error al comunicarse con el asistente',
           message: 'Lo sentimos, estamos experimentando problemas técnicos. Por favor, contacte con nosotros directamente a través del formulario de contacto.',
-          fallback: true
+          fallback: true,
+          debug: isDevelopment ? errorDetails : undefined
         },
         { status: 500 }
       );
@@ -171,25 +217,33 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Chat API Error:', error);
+    const totalDuration = Date.now() - startTime;
+    console.error('[Chat API] Unexpected error:', error);
     
     // Log detallado del error para debugging
+    const errorDetails: any = {
+      duration: `${totalDuration}ms`,
+      timestamp: new Date().toISOString()
+    };
+    
     if (error instanceof Error) {
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+      errorDetails.message = error.message;
+      errorDetails.stack = error.stack;
+      errorDetails.name = error.name;
+      console.error('[Chat API] Error details:', errorDetails);
     } else {
-      console.error('Unknown error:', error);
+      errorDetails.unknownError = error;
+      console.error('[Chat API] Unknown error:', errorDetails);
     }
     
     // Fallback a FAQs si hay un error (usar el mensaje que ya leímos)
     if (message && relevantFAQs.length > 0) {
+      console.log('[Chat API] Using FAQ fallback due to error');
       return NextResponse.json({
         message: relevantFAQs[0].answer,
         source: 'faq',
-        fallback: true
+        fallback: true,
+        debug: isDevelopment ? errorDetails : undefined
       });
     }
 
@@ -197,7 +251,8 @@ export async function POST(request: Request) {
       { 
         error: 'Internal server error',
         message: 'Lo sentimos, estamos experimentando problemas técnicos. Por favor, contacte con nosotros directamente a través del formulario de contacto.',
-        fallback: true
+        fallback: true,
+        debug: isDevelopment ? errorDetails : undefined
       },
       { status: 500 }
     );
