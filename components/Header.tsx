@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Camera } from "lucide-react";
+import Link from "next/link";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -66,6 +67,13 @@ export default function Header() {
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-500 transition-all duration-300 group-hover:w-full"></span>
               </a>
             ))}
+            <Link
+              href="/ar"
+              className="text-sm font-medium bg-primary text-white px-4 py-2 rounded-md hover:bg-accent transition-colors flex items-center space-x-2"
+            >
+              <Camera className="w-4 h-4" />
+              <span>AR</span>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -100,6 +108,14 @@ export default function Header() {
                 {item.label}
               </a>
             ))}
+            <Link
+              href="/ar"
+              className="block text-sm font-medium bg-primary text-white px-4 py-2 rounded-md hover:bg-accent transition-colors flex items-center space-x-2 w-fit"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Camera className="w-4 h-4" />
+              <span>Ver en AR</span>
+            </Link>
           </div>
         </div>
       </nav>
