@@ -285,8 +285,8 @@ export default function ImageGallery({
                 </span>
               )}
 
-              {image.src.startsWith('/images/') ? (
-                // Para imágenes locales, usar img normal para evitar errores 400 del optimizador
+              {image.src.startsWith('/images/') || image.src.startsWith('http') ? (
+                // Para imágenes locales o externas (Unsplash), usar img normal para evitar errores del optimizador
                 <img
                   src={image.src}
                   alt={image.alt}
