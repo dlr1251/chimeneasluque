@@ -109,13 +109,20 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
-      const errorData = await response.text();
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = await response.text();
+      }
+      
       console.error('xAI API Error:', {
         status: response.status,
         statusText: response.statusText,
         error: errorData,
         collectionId: collectionId,
-        model: model
+        model: model,
+        apiUrl: apiUrl
       });
       
       // Si la API falla, proporcionar una respuesta básica usando las FAQs
@@ -138,8 +145,24 @@ export async function POST(request: Request) {
       );
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('Error parsing xAI response:', parseError);
+      const relevantFAQ = relevantFAQs[0];
+      if (relevantFAQ) {
+        return NextResponse.json({
+          message: relevantFAQ.answer,
+          source: 'faq',
+          fallback: true
+        });
+      }
+      throw new Error('Failed to parse API response');
+    }
+    
     const assistantMessage = data.choices?.[0]?.message?.content || 
+      data.message || 
       'Lo sentimos, no pude procesar tu mensaje. Por favor, intenta de nuevo.';
 
     return NextResponse.json({

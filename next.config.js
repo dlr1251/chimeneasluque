@@ -8,6 +8,25 @@ const nextConfig = {
       'cdn.pixabay.com',
     ],
     unoptimized: false,
+    // Deshabilitar optimización para imágenes locales que pueden no existir
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'www.chimeneasluque.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'plus.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.pixabay.com',
+      },
+    ],
   },
   // Configuración para A-Frame y AR.js
   webpack: (config, { isServer }) => {

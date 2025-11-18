@@ -276,23 +276,39 @@ export default function ImageGallery({
                 </span>
               )}
 
-              <Image
-                src={image.src}
-                alt={image.alt}
-                fill
-                className={`object-cover transition-transform duration-500 will-change-transform ${
-                  isPlaceholder ? "group-hover:scale-100" : "group-hover:scale-110"
-                }`}
-                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                loading={index === 0 ? undefined : "lazy"}
-                priority={!isPlaceholder && hasRealImages && index === 0}
-                unoptimized={image.src.startsWith('/images/')}
-                onError={
-                  isPlaceholder
-                    ? undefined
-                    : (e) => handleImageError(e, image, baseSrc, extensions)
-                }
-              />
+              {image.src.startsWith('/images/') ? (
+                // Para imágenes locales, usar img normal para evitar errores 400 del optimizador
+                <img
+                  src={image.src}
+                  alt={image.alt}
+                  className={`object-cover transition-transform duration-500 will-change-transform w-full h-full ${
+                    isPlaceholder ? "group-hover:scale-100" : "group-hover:scale-110"
+                  }`}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  onError={
+                    isPlaceholder
+                      ? undefined
+                      : (e) => handleImageError(e, image, baseSrc, extensions)
+                  }
+                />
+              ) : (
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  className={`object-cover transition-transform duration-500 will-change-transform ${
+                    isPlaceholder ? "group-hover:scale-100" : "group-hover:scale-110"
+                  }`}
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                  loading={index === 0 ? undefined : "lazy"}
+                  priority={!isPlaceholder && hasRealImages && index === 0}
+                  onError={
+                    isPlaceholder
+                      ? undefined
+                      : (e) => handleImageError(e, image, baseSrc, extensions)
+                  }
+                />
+              )}
 
               <div className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 text-white">
                 <p className="text-sm font-semibold drop-shadow-md">{description}</p>
@@ -361,15 +377,23 @@ export default function ImageGallery({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative w-full h-full">
-              <Image
-                src={validImages[selectedImage].src}
-                alt={validImages[selectedImage].alt}
-                fill
-                className="object-contain"
-                sizes="100vw"
-                priority
-                unoptimized={validImages[selectedImage].src.startsWith('/images/')}
-              />
+              {validImages[selectedImage].src.startsWith('/images/') ? (
+                <img
+                  src={validImages[selectedImage].src}
+                  alt={validImages[selectedImage].alt}
+                  className="object-contain w-full h-full"
+                  loading="eager"
+                />
+              ) : (
+                <Image
+                  src={validImages[selectedImage].src}
+                  alt={validImages[selectedImage].alt}
+                  fill
+                  className="object-contain"
+                  sizes="100vw"
+                  priority
+                />
+              )}
             </div>
           </div>
         </div>
