@@ -286,6 +286,7 @@ export default function ImageGallery({
                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                 loading={index === 0 ? undefined : "lazy"}
                 priority={!isPlaceholder && hasRealImages && index === 0}
+                unoptimized={image.src.startsWith('/images/')}
                 onError={
                   isPlaceholder
                     ? undefined
@@ -367,6 +368,7 @@ export default function ImageGallery({
                 className="object-contain"
                 sizes="100vw"
                 priority
+                unoptimized={validImages[selectedImage].src.startsWith('/images/')}
               />
             </div>
           </div>

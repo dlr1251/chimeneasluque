@@ -150,6 +150,17 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Chat API Error:', error);
     
+    // Log detallado del error para debugging
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    } else {
+      console.error('Unknown error:', error);
+    }
+    
     // Fallback a FAQs si hay un error (usar el mensaje que ya leímos)
     if (message && relevantFAQs.length > 0) {
       return NextResponse.json({
@@ -162,7 +173,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { 
         error: 'Internal server error',
-        message: 'Lo sentimos, ocurrió un error. Por favor, contacte con nosotros directamente a través del formulario de contacto.',
+        message: 'Lo sentimos, estamos experimentando problemas técnicos. Por favor, contacte con nosotros directamente a través del formulario de contacto.',
         fallback: true
       },
       { status: 500 }

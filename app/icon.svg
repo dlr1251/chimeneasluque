@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="flameGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B00;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FF8C00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF4500;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Llama principal -->
+  <path d="M16 28 C12 28, 10 24, 10 20 C10 18, 11 16, 12 14 C13 12, 14 10, 16 8 C18 10, 19 12, 20 14 C21 16, 22 18, 22 20 C22 24, 20 28, 16 28 Z" fill="url(#flameGradient)"/>
+  <!-- Llama interna más clara -->
+  <path d="M16 24 C14 24, 13 22, 13 20 C13 19, 13.5 18, 14 17 C14.5 16, 15 15, 16 14 C17 15, 17.5 16, 18 17 C18.5 18, 19 19, 19 20 C19 22, 18 24, 16 24 Z" fill="#FFD700" opacity="0.8"/>
+  <!-- Chispa superior -->
+  <circle cx="16" cy="10" r="1.5" fill="#FFA500"/>
+  <circle cx="14" cy="11" r="1" fill="#FFA500" opacity="0.7"/>
+  <circle cx="18" cy="11" r="1" fill="#FFA500" opacity="0.7"/>
+</svg>
+
