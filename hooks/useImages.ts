@@ -17,45 +17,24 @@ export function useImages(category: 'hornos' | 'chimeneas' | 'fogatas') {
     const loadImages = async () => {
       try {
         const response = await fetch(`/api/images?category=${category}`);
+        
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.images && data.images.length > 0) {
+          // Solo usar imágenes que realmente existen según la API
           setImages(data.images);
         } else {
-          // Si no hay imágenes en la API, generar rutas esperadas como fallback
-          const maxImages = category === 'chimeneas' ? 32 : 14;
-          const extensions = ['.jpg', '.jpeg', '.png', '.webp'];
-          const fallbackImages: ImageInfo[] = [];
-          
-          for (let i = 1; i <= maxImages; i++) {
-            // Intentar diferentes extensiones
-            for (const ext of extensions) {
-              fallbackImages.push({
-                id: i,
-                src: `/images/${category}/${category}${i}${ext}`,
-                alt: `${category} ${i}`
-              });
-              break; // Solo agregar una por número
-            }
-          }
-          
-          setImages(fallbackImages);
+          // Si no hay imágenes, usar array vacío - el componente mostrará placeholders
+          setImages([]);
         }
       } catch (error) {
         console.error(`Error loading images for ${category}:`, error);
-        // Fallback: generar rutas esperadas
-        const maxImages = category === 'chimeneas' ? 32 : 14;
-        const fallbackImages: ImageInfo[] = [];
-        
-        for (let i = 1; i <= maxImages; i++) {
-          fallbackImages.push({
-            id: i,
-            src: `/images/${category}/${category}${i}.jpg`,
-            alt: `${category} ${i}`
-          });
-        }
-        
-        setImages(fallbackImages);
+        // En caso de error, no generar rutas falsas - usar array vacío
+        setImages([]);
       } finally {
         setLoading(false);
       }

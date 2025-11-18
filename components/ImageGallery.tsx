@@ -178,6 +178,7 @@ export default function ImageGallery({
 
     const attempts = imageRetryAttempts.get(image.id) || 0;
 
+    // Si ya intentamos todas las extensiones, marcar como error y no seguir intentando
     if (attempts >= extensions.length - 1) {
       setLocalImageErrors((prev) => {
         const newSet = new Set(prev);
@@ -185,6 +186,9 @@ export default function ImageGallery({
         return newSet;
       });
       onImageError(image.id);
+      // Prevenir que el navegador siga intentando cargar la imagen
+      const imgElement = e.currentTarget;
+      imgElement.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1" height="1"%3E%3C/svg%3E';
       return;
     }
 
@@ -208,6 +212,9 @@ export default function ImageGallery({
         return newSet;
       });
       onImageError(image.id);
+      // Prevenir que el navegador siga intentando cargar la imagen
+      const imgElement = e.currentTarget;
+      imgElement.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1" height="1"%3E%3C/svg%3E';
     }
   };
 
