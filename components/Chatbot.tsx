@@ -21,7 +21,7 @@ export default function Chatbot({ onClose, initialOpen = false }: ChatbotProps) 
     {
       id: "1",
       role: "assistant",
-      content: "¡Hola! Soy Lucio Luque, agente de servicio al cliente de Chimeneas Luque. ¿En qué puedo ayudarte hoy con tu proyecto de chimenea? 🔥",
+      content: "Buenos días. Soy Lucio Luque, agente de servicio al cliente de Chimeneas Luque. ¿En qué puedo asistirle con su proyecto de chimenea? 🔥",
       timestamp: new Date(),
     },
   ]);
