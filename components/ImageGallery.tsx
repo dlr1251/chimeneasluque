@@ -247,8 +247,10 @@ export default function ImageGallery({
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {galleryImages.map((image, index) => {
-          const extensions = [".jpg", ".jpeg", ".png", ".webp"];
-          const baseSrc = image.src.replace(/\.(jpg|jpeg|png|webp)$/i, "");
+          // Solo intentar múltiples extensiones si la imagen no tiene extensión o es placeholder
+          const hasExtension = /\.(jpg|jpeg|png|webp)$/i.test(image.src);
+          const extensions = hasExtension ? [] : [".jpg", ".jpeg", ".png", ".webp"];
+          const baseSrc = hasExtension ? image.src : image.src.replace(/\.(jpg|jpeg|png|webp)$/i, "");
           const isPlaceholder = Boolean(image.isPlaceholder);
           const description =
             image.description || image.alt || `${categoryName} artesanal`;
@@ -293,7 +295,7 @@ export default function ImageGallery({
                   }`}
                   loading={index === 0 ? "eager" : "lazy"}
                   onError={
-                    isPlaceholder
+                    isPlaceholder || extensions.length === 0
                       ? undefined
                       : (e) => handleImageError(e, image, baseSrc, extensions)
                   }
@@ -310,7 +312,7 @@ export default function ImageGallery({
                   loading={index === 0 ? undefined : "lazy"}
                   priority={!isPlaceholder && hasRealImages && index === 0}
                   onError={
-                    isPlaceholder
+                    isPlaceholder || extensions.length === 0
                       ? undefined
                       : (e) => handleImageError(e, image, baseSrc, extensions)
                   }
