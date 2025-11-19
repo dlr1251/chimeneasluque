@@ -141,7 +141,17 @@ export default function ImageGallery({
   }, [isLightboxOpen, selectedImage, validImages.length]);
 
   const openLightbox = (index: number) => {
-    setSelectedImage(index);
+    // Asegurar que solo abrimos el lightbox con imágenes reales válidas
+    if (!hasRealImages || validImages.length === 0) return;
+    
+    // Encontrar el índice correcto en validImages
+    const image = galleryImages[index];
+    if (image.isPlaceholder) return;
+    
+    const validIndex = validImages.findIndex((img) => img.id === image.id);
+    if (validIndex === -1) return;
+    
+    setSelectedImage(validIndex);
     setIsLightboxOpen(true);
     document.body.style.overflow = "hidden";
   };
@@ -172,12 +182,25 @@ export default function ImageGallery({
     baseSrc: string,
     extensions: string[]
   ) => {
+    // Prevenir loops infinitos
     if (localImageErrors.has(image.id)) {
+      return;
+    }
+
+    // No intentar múltiples extensiones para URLs externas
+    if (image.src.startsWith("http")) {
+      setLocalImageErrors((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(image.id);
+        return newSet;
+      });
+      onImageError(image.id);
       return;
     }
 
     const attempts = imageRetryAttempts.get(image.id) || 0;
 
+    // Si ya intentamos todas las extensiones, marcar como error
     if (attempts >= extensions.length - 1) {
       setLocalImageErrors((prev) => {
         const newSet = new Set(prev);
@@ -188,8 +211,9 @@ export default function ImageGallery({
       return;
     }
 
+    // Intentar siguiente extensión solo si hay más opciones
     const nextExtIndex = attempts + 1;
-    if (nextExtIndex < extensions.length) {
+    if (nextExtIndex < extensions.length && baseSrc) {
       const nextSrc = baseSrc + extensions[nextExtIndex];
       setImageRetryAttempts((prev) => {
         const newMap = new Map(prev);
@@ -197,11 +221,15 @@ export default function ImageGallery({
         return newMap;
       });
 
-      const imgElement = e.currentTarget;
-      setTimeout(() => {
-        imgElement.src = nextSrc;
-      }, 0);
+      // Usar requestAnimationFrame para evitar problemas de timing
+      requestAnimationFrame(() => {
+        const imgElement = e.currentTarget;
+        if (imgElement && imgElement.src !== nextSrc) {
+          imgElement.src = nextSrc;
+        }
+      });
     } else {
+      // No hay más extensiones, marcar como error
       setLocalImageErrors((prev) => {
         const newSet = new Set(prev);
         newSet.add(image.id);
@@ -240,8 +268,10 @@ export default function ImageGallery({
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {galleryImages.map((image, index) => {
-          const extensions = [".jpg", ".jpeg", ".png", ".webp"];
-          const baseSrc = image.src.replace(/\.(jpg|jpeg|png|webp)$/i, "");
+          // Solo procesar extensiones para imágenes locales
+          const isExternal = image.src.startsWith("http");
+          const extensions = isExternal ? [] : [".jpg", ".jpeg", ".png", ".webp"];
+          const baseSrc = isExternal ? "" : image.src.replace(/\.(jpg|jpeg|png|webp)$/i, "");
           const isPlaceholder = Boolean(image.isPlaceholder);
           const description =
             image.description || image.alt || `${categoryName} artesanal`;
@@ -284,13 +314,15 @@ export default function ImageGallery({
                   isPlaceholder ? "group-hover:scale-100" : "group-hover:scale-110"
                 }`}
                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                loading={index === 0 ? undefined : "lazy"}
-                priority={!isPlaceholder && hasRealImages && index === 0}
+                {...(isPlaceholder || !hasRealImages || index !== 0
+                  ? { loading: "lazy" as const }
+                  : { priority: true })}
                 onError={
-                  isPlaceholder
+                  isPlaceholder || image.src.startsWith("http")
                     ? undefined
                     : (e) => handleImageError(e, image, baseSrc, extensions)
                 }
+                unoptimized={isPlaceholder}
               />
 
               <div className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 text-white">
@@ -305,7 +337,7 @@ export default function ImageGallery({
       </div>
 
       {/* Lightbox Modal */}
-      {isLightboxOpen && selectedImage !== null && (
+      {isLightboxOpen && selectedImage !== null && selectedImage >= 0 && selectedImage < validImages.length && validImages.length > 0 && (
         <div
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in-up"
           onClick={closeLightbox}
@@ -360,14 +392,17 @@ export default function ImageGallery({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative w-full h-full">
-              <Image
-                src={validImages[selectedImage].src}
-                alt={validImages[selectedImage].alt}
-                fill
-                className="object-contain"
-                sizes="100vw"
-                priority
-              />
+              {validImages[selectedImage] && (
+                <Image
+                  src={validImages[selectedImage].src}
+                  alt={validImages[selectedImage].alt || "Imagen de galería"}
+                  fill
+                  className="object-contain"
+                  sizes="100vw"
+                  priority
+                  unoptimized={validImages[selectedImage].src.startsWith("http")}
+                />
+              )}
             </div>
           </div>
         </div>
