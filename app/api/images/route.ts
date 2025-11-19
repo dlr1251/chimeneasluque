@@ -1,41 +1,50 @@
 import { NextResponse } from 'next/server';
+import { getImagesForCategory } from '@/lib/images';
 import fs from 'fs';
 import path from 'path';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category');
-  
+  const featured = searchParams.get('featured') === 'true';
+
   if (!category || !['hornos', 'chimeneas', 'fogatas'].includes(category)) {
     return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
   }
-  
+
   try {
-    const imagesDir = path.join(process.cwd(), 'public', 'images', category);
-    
-    if (!fs.existsSync(imagesDir)) {
-      return NextResponse.json({ images: [] });
+    // Obtener imágenes de la base de datos estructurada
+    let images = getImagesForCategory(category as 'hornos' | 'chimeneas' | 'fogatas');
+
+    // Filtrar por destacadas si se solicita
+    if (featured) {
+      images = images.filter(img => img.featured);
     }
-    
-    const files = fs.readdirSync(imagesDir)
-      .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
-      .map(file => {
-        // Extraer el número del nombre del archivo
-        const match = file.match(/\d+/);
-        const num = match ? parseInt(match[0]) : 0;
-        return { file, num };
-      })
-      .sort((a, b) => a.num - b.num)
-      .map(({ file, num }) => ({
-        id: num,
-        src: `/images/${category}/${file}`,
-        alt: `${category} ${num}`
-      }));
-    
-    return NextResponse.json({ images: files });
+
+    // Verificar que las imágenes realmente existen en el sistema de archivos
+    const verifiedImages = [];
+    for (const image of images) {
+      try {
+        const imagePath = path.join(process.cwd(), 'public', image.src);
+        if (fs.existsSync(imagePath)) {
+          verifiedImages.push(image);
+        } else {
+          console.warn(`Image not found: ${image.src}`);
+        }
+      } catch (error) {
+        console.warn(`Error checking image ${image.src}:`, error);
+      }
+    }
+
+    return NextResponse.json({
+      images: verifiedImages,
+      total: verifiedImages.length,
+      category: category,
+      featured: featured
+    });
   } catch (error) {
-    console.error('Error reading images:', error);
-    return NextResponse.json({ error: 'Failed to read images' }, { status: 500 });
+    console.error('Error processing images:', error);
+    return NextResponse.json({ error: 'Failed to process images' }, { status: 500 });
   }
 }
 

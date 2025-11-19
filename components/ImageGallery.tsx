@@ -347,9 +347,23 @@ export default function ImageGallery({
               )}
 
               <div className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 text-white">
-                <p className="text-sm font-semibold drop-shadow-md">{description}</p>
+                <p className="text-sm font-semibold drop-shadow-md">
+                  {image.title || description}
+                </p>
+                {image.description && image.title && (
+                  <p className="text-xs text-white/90 mt-1 drop-shadow-sm">
+                    {image.description}
+                  </p>
+                )}
                 {image.location && (
-                  <span className="text-xs text-white/80">{image.location}</span>
+                  <span className="text-xs text-white/80 mt-1 block">
+                    📍 {image.location}
+                  </span>
+                )}
+                {image.type && (
+                  <span className="text-xs text-white/70 mt-1 block uppercase tracking-wide">
+                    {image.type}
+                  </span>
                 )}
               </div>
             </div>
