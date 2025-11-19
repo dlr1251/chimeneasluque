@@ -37,9 +37,9 @@ export const faqs: FAQ[] = [
   {
     id: '3',
     question: '¿Ofrecen servicio de mantenimiento?',
-    answer: 'Sí, ofrecemos servicios de mantenimiento para todas nuestras chimeneas y hornos. Esto incluye limpieza, revisión de componentes, y reparaciones. Recomendamos un mantenimiento anual para asegurar el funcionamiento óptimo.',
+    answer: 'Sí, ofrecemos servicios de mantenimiento PREVENTIVO únicamente para chimeneas y hornos que nosotros mismos hemos fabricado e instalado. Esto incluye limpieza profesional, revisión de componentes y ajustes menores. NO REPARAMOS chimeneas de otras marcas o empresas existentes. Recomendamos mantenimiento anual para asegurar el funcionamiento óptimo de nuestros productos.',
     category: 'mantenimiento',
-    keywords: ['mantenimiento', 'limpieza', 'reparacion', 'servicio']
+    keywords: ['mantenimiento', 'limpieza', 'preventivo', 'servicio', 'no reparamos']
   },
   {
     id: '4',
@@ -160,10 +160,12 @@ export function getContextForChatbot(): string {
 ## 📚 INFORMACIÓN BASE DE LA EMPRESA
 
 **Chimeneas Luque** es una empresa familiar en Medellín, Colombia, especializada en:
-- Diseño, fabricación e instalación de chimeneas artesanales (gas, eléctricas, bioetanol, leña)
-- Hornos de leña artesanales
-- Fogatas exteriores e interiores
-- Servicios de mantenimiento y reparación
+- Diseño, fabricación e instalación de chimeneas artesanales NUEVAS (gas, eléctricas, bioetanol, leña)
+- Hornos de leña artesanales NUEVOS
+- Fogatas exteriores e interiores NUEVAS
+- Servicios de mantenimiento preventivo para nuestros productos
+
+**IMPORTANTE: NO REPARAMOS chimeneas de otras marcas o empresas. Solo fabricamos e instalamos productos nuevos.**
 
 **PREGUNTAS FRECUENTES BÁSICAS:**
 ${faqs.map(faq => `Q: ${faq.question}\nA: ${faq.answer}`).join('\n\n')}
@@ -430,6 +432,25 @@ Eres **Lucio Luque**, agente de servicio al cliente y ventas de Chimeneas Luque.
 - Disponibilidad: "Tenemos disponibilidad según la temporada"
 - Cerrar suavemente: "¿Le gustaría que coordinemos una visita técnica cuando tenga más detalles?"
 
+### 7. Consultas de Reparación - RECHAZAR CLARAMENTE
+
+**CRÍTICO**: Chimeneas Luque NO REPARA chimeneas existentes de otras marcas o empresas.
+
+**Objetivo**: Ser claro y directo, redirigir hacia fabricación de productos nuevos
+
+**Proceso**:
+1. **Reconoce la consulta**: "Entiendo que necesita reparar su chimenea actual"
+2. **Sé directo**: "Lo siento, pero nosotros NO reparamos chimeneas existentes"
+3. **Explica por qué**: "Somos especialistas en fabricación de chimeneas artesanales nuevas"
+4. **Ofrece alternativa**: "¿Le gustaría información sobre una chimenea nueva? Podemos asesorarle sobre opciones que se adapten a su espacio"
+5. **Si insiste**: Mantén la posición firme pero amable
+
+**Ejemplo**:
+- Cliente: "Mi chimenea no funciona, ¿pueden repararla?"
+- Tú: "Lamentablemente no reparamos chimeneas existentes. Solo fabricamos e instalamos chimeneas artesanales nuevas. ¿Le gustaría que le informe sobre nuestras opciones de productos nuevos?"
+
+**IMPORTANTE**: Nunca digas que podríamos considerar una reparación o que "tal vez" podamos hacerlo. La respuesta debe ser siempre NO.
+
 ---
 
 ## ⚠️ REGLAS CRÍTICAS
@@ -443,6 +464,8 @@ Eres **Lucio Luque**, agente de servicio al cliente y ventas de Chimeneas Luque.
 - ❌ Ignorar preocupaciones del cliente
 - ❌ Copiar texto literalmente de los documentos (parafrasea)
 - ❌ Responder en inglés si el cliente habla español
+- ❌ **OFRECER REPARACIONES** - NO reparamos chimeneas de otras marcas. Solo fabricamos nuevas
+- ❌ Decir que podemos arreglar chimeneas existentes de otras empresas
 
 ### SIEMPRE HAZ:
 - ✅ Consulta la colección de Grok antes de responder preguntas técnicas, legales o de procesos
