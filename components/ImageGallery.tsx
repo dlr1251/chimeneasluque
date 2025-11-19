@@ -200,7 +200,7 @@ export default function ImageGallery({
 
     const attempts = imageRetryAttempts.get(image.id) || 0;
 
-    // Si ya intentamos todas las extensiones, marcar como error
+    // Si ya intentamos todas las extensiones, marcar como error y no seguir intentando
     if (attempts >= extensions.length - 1) {
       setLocalImageErrors((prev) => {
         const newSet = new Set(prev);
@@ -208,6 +208,9 @@ export default function ImageGallery({
         return newSet;
       });
       onImageError(image.id);
+      // Prevenir que el navegador siga intentando cargar la imagen
+      const imgElement = e.currentTarget;
+      imgElement.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1" height="1"%3E%3C/svg%3E';
       return;
     }
 
@@ -236,6 +239,9 @@ export default function ImageGallery({
         return newSet;
       });
       onImageError(image.id);
+      // Prevenir que el navegador siga intentando cargar la imagen
+      const imgElement = e.currentTarget;
+      imgElement.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1" height="1"%3E%3C/svg%3E';
     }
   };
 
@@ -268,10 +274,10 @@ export default function ImageGallery({
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {galleryImages.map((image, index) => {
-          // Solo procesar extensiones para imágenes locales
-          const isExternal = image.src.startsWith("http");
-          const extensions = isExternal ? [] : [".jpg", ".jpeg", ".png", ".webp"];
-          const baseSrc = isExternal ? "" : image.src.replace(/\.(jpg|jpeg|png|webp)$/i, "");
+          // Solo intentar múltiples extensiones si la imagen no tiene extensión o es placeholder
+          const hasExtension = /\.(jpg|jpeg|png|webp)$/i.test(image.src);
+          const extensions = hasExtension ? [] : [".jpg", ".jpeg", ".png", ".webp"];
+          const baseSrc = hasExtension ? image.src : image.src.replace(/\.(jpg|jpeg|png|webp)$/i, "");
           const isPlaceholder = Boolean(image.isPlaceholder);
           const description =
             image.description || image.alt || `${categoryName} artesanal`;
@@ -306,24 +312,39 @@ export default function ImageGallery({
                 </span>
               )}
 
-              <Image
-                src={image.src}
-                alt={image.alt}
-                fill
-                className={`object-cover transition-transform duration-500 will-change-transform ${
-                  isPlaceholder ? "group-hover:scale-100" : "group-hover:scale-110"
-                }`}
-                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                {...(isPlaceholder || !hasRealImages || index !== 0
-                  ? { loading: "lazy" as const }
-                  : { priority: true })}
-                onError={
-                  isPlaceholder || image.src.startsWith("http")
-                    ? undefined
-                    : (e) => handleImageError(e, image, baseSrc, extensions)
-                }
-                unoptimized={isPlaceholder}
-              />
+              {image.src.startsWith('/images/') || image.src.startsWith('http') ? (
+                // Para imágenes locales o externas (Unsplash), usar img normal para evitar errores del optimizador
+                <img
+                  src={image.src}
+                  alt={image.alt}
+                  className={`object-cover transition-transform duration-500 will-change-transform w-full h-full ${
+                    isPlaceholder ? "group-hover:scale-100" : "group-hover:scale-110"
+                  }`}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  onError={
+                    isPlaceholder || extensions.length === 0
+                      ? undefined
+                      : (e) => handleImageError(e, image, baseSrc, extensions)
+                  }
+                />
+              ) : (
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  className={`object-cover transition-transform duration-500 will-change-transform ${
+                    isPlaceholder ? "group-hover:scale-100" : "group-hover:scale-110"
+                  }`}
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                  loading={index === 0 ? undefined : "lazy"}
+                  priority={!isPlaceholder && hasRealImages && index === 0}
+                  onError={
+                    isPlaceholder || extensions.length === 0
+                      ? undefined
+                      : (e) => handleImageError(e, image, baseSrc, extensions)
+                  }
+                />
+              )}
 
               <div className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 text-white">
                 <p className="text-sm font-semibold drop-shadow-md">{description}</p>
@@ -392,15 +413,23 @@ export default function ImageGallery({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative w-full h-full">
-              {validImages[selectedImage] && (
+              {validImages[selectedImage].src.startsWith('/images/') ? (
+                <img
+                  src={validImages[selectedImage].src}
+                  alt={validImages[selectedImage].alt}
+                  className="object-contain w-full h-full"
+                  loading="eager"
+                />
+              ) : (
                 <Image
                   src={validImages[selectedImage].src}
-                  alt={validImages[selectedImage].alt || "Imagen de galería"}
+                  alt={validImages[selectedImage].alt}
                   fill
                   className="object-contain"
                   sizes="100vw"
                   priority
-                  unoptimized={validImages[selectedImage].src.startsWith("http")}
+                />
+              )}
                 />
               )}
             </div>

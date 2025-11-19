@@ -11,6 +11,7 @@ Este es un clon de la aplicación web de Chimeneas Luque construido con Next.js,
 - 📧 Formulario de contacto integrado
 - 🖼️ Optimización de imágenes con Next.js Image
 - 📥 Scripts para descargar imágenes del sitio web
+- 🎯 **Módulo AR**: Visualización en Realidad Aumentada del horno de leña
 
 ## Instalación
 
@@ -114,14 +115,30 @@ Para desplegar esta aplicación en GitHub y Vercel, consulta la guía completa e
    - Importa tu repositorio de GitHub
    - Vercel detectará automáticamente Next.js y desplegará
 
+## Módulo AR
+
+El proyecto incluye un módulo completo de Realidad Aumentada para visualizar el horno de leña en 3D.
+
+**Para más información sobre el módulo AR, consulta [README-AR.md](./README-AR.md)**
+
+### Uso Rápido del AR
+
+1. Haz clic en el botón **"AR"** en el menú principal
+2. Descarga e imprime el marcador Hiro
+3. Apunta la cámara hacia el marcador
+4. ¡Disfruta de la experiencia AR!
+
 ## Notas
 
 - Las imágenes se optimizan automáticamente usando Next.js Image component.
 - Si las imágenes no se descargan automáticamente, puedes descargarlas manualmente siguiendo las instrucciones en [README-IMAGES.md](./README-IMAGES.md).
 - El formulario de contacto actualmente abre el cliente de correo predeterminado. Puedes integrarlo con un servicio de backend si lo deseas.
 - Las imágenes que no existen mostrarán un placeholder automáticamente hasta que se descarguen.
+- El módulo AR requiere HTTPS y acceso a la cámara del dispositivo para funcionar correctamente.
 
 ## Licencia
 
 Este proyecto es un clon educativo del sitio web de Chimeneas Luque.
 
+git remote add origin https://github.com/dlr1251/chimeneasluque.git
+git push -u origin main
