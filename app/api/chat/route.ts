@@ -51,7 +51,8 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!message || typeof message !== 'string') {
+  // Permitir mensajes vacíos si hay archivos adjuntos
+  if ((!message || typeof message !== 'string') && attachedFiles.length === 0) {
     return NextResponse.json(
       { error: 'Message is required', message: 'Por favor, envía un mensaje válido.' },
       { status: 400 }
@@ -125,8 +126,11 @@ export async function POST(request: Request) {
     let userContent: any = message;
 
     if (processedFiles.length > 0) {
+      // Si no hay mensaje pero hay archivos, usar mensaje por defecto
+      const messageText = message || 'Analiza estos archivos y dime qué ves y qué relación tienen con nuestros servicios de chimeneas.';
+
       userContent = [
-        { type: 'text', text: message || 'Analiza estos archivos:' },
+        { type: 'text', text: messageText },
         ...processedFiles.map(file => ({
           type: file.type === 'image' ? 'image_url' : 'file',
           [file.type === 'image' ? 'image_url' : 'file']: {
