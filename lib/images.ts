@@ -244,7 +244,8 @@ export function getImageStats() {
   };
 
   // Contar tipos
-  Object.keys(IMAGES_DATABASE).forEach(category => {
+  Object.keys(IMAGES_DATABASE).forEach(categoryKey => {
+    const category = categoryKey as 'chimeneas' | 'hornos' | 'fogatas';
     const images = IMAGES_DATABASE[category];
     images.forEach(img => {
       if (img.type) {
