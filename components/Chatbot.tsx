@@ -146,23 +146,36 @@ export default function Chatbot({ onClose, initialOpen = false }: ChatbotProps) 
           content: msg.content,
         }));
 
-      // Crear FormData para enviar mensaje y archivos
-      const formData = new FormData();
-      formData.append('message', userMessage.content);
-      formData.append('conversationHistory', JSON.stringify(conversationHistory));
+      let response;
 
-      // Agregar archivos adjuntos
+      // Si hay archivos adjuntos, usar FormData
       if (userMessage.attachments && userMessage.attachments.length > 0) {
+        const formData = new FormData();
+        formData.append('message', userMessage.content);
+        formData.append('conversationHistory', JSON.stringify(conversationHistory));
+
         userMessage.attachments.forEach((attachment, index) => {
           formData.append(`file_${index}`, attachment.file);
         });
         formData.append('fileCount', userMessage.attachments.length.toString());
-      }
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        body: formData, // No incluir headers Content-Type para que el navegador lo setee automáticamente con boundary
-      });
+        response = await fetch("/api/chat", {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        // Si no hay archivos, usar JSON normal
+        response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: userMessage.content,
+            conversationHistory: conversationHistory,
+          }),
+        });
+      }
 
       const data = await response.json();
 

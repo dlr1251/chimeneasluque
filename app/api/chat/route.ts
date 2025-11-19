@@ -7,26 +7,40 @@ export async function POST(request: Request) {
   let conversationHistory: any[] = [];
   let attachedFiles: File[] = [];
 
-  // Leer el body como FormData para manejar archivos y texto
+  // Leer el body - puede ser JSON o FormData
   try {
-    const formData = await request.formData();
-    message = formData.get('message') as string || '';
-    const historyJson = formData.get('conversationHistory') as string;
-    conversationHistory = historyJson ? JSON.parse(historyJson) : [];
+    const contentType = request.headers.get('content-type') || '';
 
-    // Procesar archivos adjuntos
-    const fileCount = parseInt(formData.get('fileCount') as string || '0');
-    for (let i = 0; i < fileCount; i++) {
-      const file = formData.get(`file_${i}`) as File;
-      if (file) {
-        attachedFiles.push(file);
+    if (contentType.includes('application/json')) {
+      // Procesar como JSON (sin archivos)
+      const body = await request.json();
+      message = body.message || '';
+      conversationHistory = body.conversationHistory || [];
+      attachedFiles = [];
+    } else if (contentType.includes('multipart/form-data')) {
+      // Procesar como FormData (con archivos)
+      const formData = await request.formData();
+      message = formData.get('message') as string || '';
+      const historyJson = formData.get('conversationHistory') as string;
+      conversationHistory = historyJson ? JSON.parse(historyJson) : [];
+
+      // Procesar archivos adjuntos
+      const fileCount = parseInt(formData.get('fileCount') as string || '0');
+      for (let i = 0; i < fileCount; i++) {
+        const file = formData.get(`file_${i}`) as File;
+        if (file) {
+          attachedFiles.push(file);
+        }
       }
+    } else {
+      throw new Error('Unsupported content type');
     }
 
     console.log('[Chat API] Request received:', {
       messageLength: message.length,
       historyLength: conversationHistory.length,
       fileCount: attachedFiles.length,
+      contentType: contentType.split(';')[0],
       timestamp: new Date().toISOString()
     });
   } catch (error) {
