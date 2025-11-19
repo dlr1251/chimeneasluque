@@ -9,8 +9,11 @@ interface ImageItem {
   id: number;
   src: string;
   alt: string;
+  title?: string;
   description?: string;
   location?: string;
+  type?: string;
+  featured?: boolean;
   badge?: string;
   isPlaceholder?: boolean;
 }
