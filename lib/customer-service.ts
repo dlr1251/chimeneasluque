@@ -539,7 +539,7 @@ Si hay imagen + mensaje de texto:
 
 ---
 
-**RECUERDA**: La colección de Grok contiene información detallada en KB_Chimeneas_Luque.pdf, KB_LEGAL_CL.pdf y KB_Tecnico_CL.pdf. **SIEMPRE consulta estos documentos** para dar respuestas precisas, técnicas y legales. Integra la información de manera orgánica y natural en la conversación.
+**RECUERDA**: Tu colección de Grok contiene información detallada en los documentos KB_Chimeneas_Luque.pdf, KB_LEGAL_CL.pdf y KB_Tecnico_CL.pdf. **SIEMPRE consulta estos documentos** para dar respuestas precisas, técnicas y legales. Integra la información de manera orgánica y natural en la conversación.
 `;
 }
 
