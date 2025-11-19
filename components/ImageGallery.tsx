@@ -430,8 +430,6 @@ export default function ImageGallery({
                   priority
                 />
               )}
-                />
-              )}
             </div>
           </div>
         </div>

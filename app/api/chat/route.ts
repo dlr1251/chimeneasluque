@@ -5,15 +5,28 @@ export async function POST(request: Request) {
   const startTime = Date.now();
   let message: string = '';
   let conversationHistory: any[] = [];
+  let attachedFiles: File[] = [];
 
-  // Leer el body una sola vez
+  // Leer el body como FormData para manejar archivos y texto
   try {
-    const body = await request.json();
-    message = body.message || '';
-    conversationHistory = body.conversationHistory || [];
+    const formData = await request.formData();
+    message = formData.get('message') as string || '';
+    const historyJson = formData.get('conversationHistory') as string;
+    conversationHistory = historyJson ? JSON.parse(historyJson) : [];
+
+    // Procesar archivos adjuntos
+    const fileCount = parseInt(formData.get('fileCount') as string || '0');
+    for (let i = 0; i < fileCount; i++) {
+      const file = formData.get(`file_${i}`) as File;
+      if (file) {
+        attachedFiles.push(file);
+      }
+    }
+
     console.log('[Chat API] Request received:', {
       messageLength: message.length,
       historyLength: conversationHistory.length,
+      fileCount: attachedFiles.length,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -73,6 +86,43 @@ export async function POST(request: Request) {
     // El contexto ya incluye todas las instrucciones detalladas
     const systemPrompt = context;
 
+    // Procesar archivos adjuntos
+    let processedFiles: any[] = [];
+    for (const file of attachedFiles) {
+      try {
+        // Convertir archivo a base64
+        const buffer = await file.arrayBuffer();
+        const base64 = Buffer.from(buffer).toString('base64');
+        const mimeType = file.type;
+
+        processedFiles.push({
+          type: mimeType.startsWith('image/') ? 'image' : 'document',
+          name: file.name,
+          size: file.size,
+          mimeType: mimeType,
+          data: base64
+        });
+      } catch (error) {
+        console.error(`[Chat API] Error processing file ${file.name}:`, error);
+      }
+    }
+
+    // Construir el mensaje del usuario con archivos
+    let userContent: any = message;
+
+    if (processedFiles.length > 0) {
+      userContent = [
+        { type: 'text', text: message || 'Analiza estos archivos:' },
+        ...processedFiles.map(file => ({
+          type: file.type === 'image' ? 'image_url' : 'file',
+          [file.type === 'image' ? 'image_url' : 'file']: {
+            url: `data:${file.mimeType};base64,${file.data}`,
+            filename: file.name
+          }
+        }))
+      ];
+    }
+
     // Construir el historial de conversación
     const messages = [
       {
@@ -85,7 +135,7 @@ export async function POST(request: Request) {
       })),
       {
         role: 'user',
-        content: message
+        content: userContent
       }
     ];
 
