@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, X, MessageCircle, Bot, User, Paperclip, File, Image as ImageIcon, Trash2 } from "lucide-react";
+import { INITIAL_CHAT_MESSAGE } from "@/lib/customer-service";
 
 interface AttachedFile {
   id: string;
@@ -28,7 +29,7 @@ export default function Chatbot({ onClose, initialOpen = false }: ChatbotProps) 
     {
       id: "1",
       role: "assistant",
-      content: "Buenos días. Soy Lucio Luque de Chimeneas Luque. ¿En qué puedo ayudarle? 🔥",
+      content: INITIAL_CHAT_MESSAGE,
       timestamp: new Date(),
     },
   ]);
